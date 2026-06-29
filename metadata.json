@@ -1,0 +1,6 @@
+{
+  "name": "HN Oliveira Street Luxury",
+  "description": "Streetwear premium. Identidade urbana, qualidade de grife.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

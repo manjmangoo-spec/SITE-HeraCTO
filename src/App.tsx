@@ -3,6 +3,7 @@ import { Header }       from './components/Header';
 import { Hero }         from './components/Hero';
 import { Products }     from './components/Products';
 import { About }        from './components/About';
+import { ProductDetails } from './components/ProductDetails';
 import { CartDrawer }   from './components/CartDrawer';
 import { SearchDrawer } from './components/SearchDrawer';
 import { Product, CartItem } from './data/products';
@@ -43,6 +44,8 @@ export default function App() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [cartItems,  setCartItems]  = useState<CartItem[]>(loadCart);
   const [wishlist,   setWishlist]   = useState<string[]>(loadWishlist);
+  
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
   /* Persist cart and wishlist */
   useEffect(() => { saveCart(cartItems); }, [cartItems]);
@@ -134,13 +137,28 @@ export default function App() {
       />
 
       <main id="main-content" tabIndex={-1}>
-        <Hero />
-        <Products
-          onAddToCart={handleAddToCart}
-          wishlist={wishlist}
-          onWishlist={handleWishlist}
-        />
-        <About />
+        {selectedProduct ? (
+          <ProductDetails 
+            product={selectedProduct}
+            onBack={() => setSelectedProduct(null)}
+            onAddToCart={handleAddToCart}
+            wishlist={wishlist}
+            onWishlist={handleWishlist}
+          />
+        ) : (
+          <>
+            <Hero />
+            <Products
+              onProductClick={(p) => {
+                setSelectedProduct(p);
+                window.scrollTo(0, 0);
+              }}
+              wishlist={wishlist}
+              onWishlist={handleWishlist}
+            />
+            <About />
+          </>
+        )}
       </main>
 
       <SearchDrawer

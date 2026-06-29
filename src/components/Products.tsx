@@ -5,12 +5,12 @@ import { ProductCard } from './ProductCard';
 import { FilterDrawer } from './FilterDrawer';
 
 interface ProductsProps {
-  onAddToCart:  (product: Product, size: string) => void;
+  onProductClick: (product: Product) => void;
   wishlist:     string[];
   onWishlist:   (product: Product) => void;
 }
 
-export function Products({ onAddToCart, wishlist, onWishlist }: ProductsProps) {
+export function Products({ onProductClick, wishlist, onWishlist }: ProductsProps) {
   const [category,  setCategory]  = useState('Todos');
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [minPrice, setMinPrice] = useState('');
@@ -163,7 +163,7 @@ export function Products({ onAddToCart, wishlist, onWishlist }: ProductsProps) {
           >
             <ProductCard
               product={product}
-              onAddToCart={onAddToCart}
+              onClick={() => onProductClick(product)}
               onWishlist={onWishlist}
               wishlisted={wishlist.includes(product.id)}
             />

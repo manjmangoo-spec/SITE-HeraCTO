@@ -1,49 +1,36 @@
-import { useState } from 'react';
-import { Heart, ShoppingBag } from 'lucide-react';
+import { Heart } from 'lucide-react';
 import { Product, formatCurrency } from '../data/products';
 
 interface ProductCardProps {
   product:      Product;
-  onAddToCart:  (product: Product, size: string) => void;
+  onClick:      () => void;
   onWishlist?:  (product: Product) => void;
   wishlisted?:  boolean;
 }
 
-export function ProductCard({ product, onAddToCart, onWishlist, wishlisted = false }: ProductCardProps) {
-  const [selectedSize, setSelectedSize]   = useState('');
-  const [sizeError,    setSizeError]      = useState(false);
+export function ProductCard({ product, onClick, onWishlist, wishlisted = false }: ProductCardProps) {
   const isLow = product.stock > 0 && product.stock <= 4;
-
-  const handleAdd = () => {
-    if (!selectedSize) {
-      setSizeError(true);
-      setTimeout(() => setSizeError(false), 1800);
-      return;
-    }
-    onAddToCart(product, selectedSize);
-    setSelectedSize('');
-  };
-
+  
   const discount = product.originalPrice
     ? Math.round((1 - product.price / product.originalPrice) * 100)
     : 0;
 
   return (
-    <article className="product-card flex flex-col gap-4">
+    <article className="product-card flex flex-col gap-4 group cursor-pointer" onClick={onClick}>
 
       {/* ── Image frame ──────────────────────────────── */}
-      <div className="product-frame aspect-[4/5]">
+      <div className="product-frame aspect-[4/5] bg-[#f4f4f4] relative overflow-hidden">
 
         {/* Badges */}
         <div className="absolute top-4 left-4 z-10 flex flex-col gap-1.5">
           {product.isNew && (
-            <span className="label-sm bg-[--ink] text-white px-2 py-1">Novo</span>
+            <span className="font-sans text-[10px] font-bold uppercase tracking-[0.1em] bg-black text-white px-2 py-1">Novo</span>
           )}
           {discount > 0 && (
-            <span className="label-sm bg-[--gold] text-white px-2 py-1">-{discount}%</span>
+            <span className="font-sans text-[10px] font-bold uppercase tracking-[0.1em] bg-[#b8922e] text-white px-2 py-1">-{discount}%</span>
           )}
           {isLow && !product.isNew && (
-            <span className="label-sm border border-[--ink] text-[--ink] px-2 py-1 bg-white/80 backdrop-blur-sm">
+            <span className="font-sans text-[10px] font-bold uppercase tracking-[0.1em] border border-black text-black px-2 py-1 bg-white/80 backdrop-blur-sm">
               Ultimas unidades
             </span>
           )}
@@ -54,7 +41,10 @@ export function ProductCard({ product, onAddToCart, onWishlist, wishlisted = fal
           type="button"
           aria-label={wishlisted ? `Remover ${product.name} dos favoritos` : `Adicionar ${product.name} aos favoritos`}
           aria-pressed={wishlisted}
-          onClick={() => onWishlist?.(product)}
+          onClick={(e) => {
+            e.stopPropagation();
+            onWishlist?.(product);
+          }}
           className={`wishlist-btn ${wishlisted ? 'is-active' : ''}`}
         >
           <Heart
@@ -71,103 +61,39 @@ export function ProductCard({ product, onAddToCart, onWishlist, wishlisted = fal
           alt={`${product.name} — ${product.brand}`}
           loading="lazy"
           decoding="async"
-          className="w-full h-full object-cover object-center"
+          className="w-full h-full object-cover object-center mix-blend-multiply group-hover:scale-105 transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]"
         />
-
-        {/* Quick-add overlay */}
-        <button
-          type="button"
-          aria-label={`Adicionar ${product.name} a sacola`}
-          onClick={handleAdd}
-          className="product-quick-add label-sm inline-flex items-center gap-2 h-10 px-5 bg-white/92 text-[--ink] backdrop-blur-sm shadow-luxury-sm hover:bg-[--ink] hover:text-white transition-colors duration-250"
-        >
-          <ShoppingBag size={12} strokeWidth={2} aria-hidden="true" />
-          Adicionar
-        </button>
       </div>
 
       {/* ── Info block ───────────────────────────────── */}
-      <div className="flex flex-col gap-2.5">
+      <div className="flex flex-col gap-1.5 px-1">
 
         {/* Brand / Category kicker */}
-        <p className="label text-[--muted]">{product.brand} / {product.category}</p>
+        <p className="font-sans text-[10px] font-bold uppercase tracking-widest text-black/50">{product.brand} / {product.category}</p>
 
         {/* Name */}
-        <h3
-          className="font-serif font-semibold uppercase leading-[0.92] tracking-[0.04em]"
-          style={{ fontSize: 'clamp(15px, 1.5vw, 22px)' }}
-        >
+        <h3 className="font-sans text-sm md:text-base font-bold uppercase tracking-tight text-black line-clamp-1">
           {product.name}
         </h3>
 
         {/* Variant */}
-        <p className="text-sm font-light text-[--graphite] leading-relaxed line-clamp-1">
-          {product.variant}
-        </p>
+        {product.variant && (
+          <p className="font-sans text-[11px] font-semibold text-black/60 line-clamp-1">
+            {product.variant}
+          </p>
+        )}
 
         {/* Price row */}
-        <div className="flex items-baseline gap-3">
-          <span className="font-semibold text-base tracking-tight">
+        <div className="flex items-baseline gap-3 mt-1">
+          <span className="font-sans text-sm font-bold tracking-tight">
             {formatCurrency(product.price)}
           </span>
           {product.originalPrice && (
-            <span className="text-sm text-[--muted] line-through font-light">
+            <span className="font-sans text-xs text-black/40 line-through font-semibold">
               {formatCurrency(product.originalPrice)}
             </span>
           )}
         </div>
-
-        {/* Size selector */}
-        <div>
-          <p className={`label-sm mb-1.5 ${sizeError ? 'text-red-600' : 'text-[--muted]'}`}>
-            {sizeError ? 'Selecione um tamanho' : 'Tamanho'}
-          </p>
-          <div className="flex flex-wrap gap-1.5" role="group" aria-label="Selecionar tamanho">
-            {product.sizes.map((size) => (
-              <button
-                key={size}
-                type="button"
-                aria-pressed={selectedSize === size}
-                aria-label={`Tamanho ${size}`}
-                onClick={() => { setSelectedSize(size); setSizeError(false); }}
-                className={`
-                  label-sm min-w-[36px] h-8 px-2
-                  border transition-all duration-200
-                  ${selectedSize === size
-                    ? 'bg-[--ink] text-white border-[--ink]'
-                    : sizeError
-                      ? 'border-red-400 text-red-600 hover:border-[--ink] hover:text-[--ink]'
-                      : 'border-[--line-strong] text-[--graphite] hover:border-[--ink] hover:text-[--ink]'
-                  }
-                `}
-              >
-                {size}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Stock indicator */}
-        <p className="label-sm text-[--muted]">
-          {product.stock === 0 ? (
-            <span className="text-red-500">Fora de estoque</span>
-          ) : isLow ? (
-            <span className="text-[--gold]">{product.stock} unidades restantes</span>
-          ) : (
-            `${product.stock} em estoque`
-          )}
-        </p>
-
-        {/* CTA */}
-        <button
-          type="button"
-          disabled={product.stock === 0}
-          onClick={handleAdd}
-          className="btn-primary mt-1 w-full disabled:opacity-40 disabled:cursor-not-allowed disabled:transform-none"
-          aria-label={`Comprar ${product.name}${selectedSize ? ` tamanho ${selectedSize}` : ''}`}
-        >
-          {product.stock === 0 ? 'Indisponivel' : 'Comprar'}
-        </button>
       </div>
     </article>
   );

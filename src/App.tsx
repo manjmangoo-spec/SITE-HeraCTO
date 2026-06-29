@@ -3,7 +3,6 @@ import { Header }       from './components/Header';
 import { Hero }         from './components/Hero';
 import { Products }     from './components/Products';
 import { About }        from './components/About';
-import { Footer }       from './components/Footer';
 import { CartDrawer }   from './components/CartDrawer';
 import { SearchDrawer } from './components/SearchDrawer';
 import { Product, CartItem } from './data/products';
@@ -143,8 +142,6 @@ export default function App() {
         />
         <About />
       </main>
-
-      <Footer />
 
       <SearchDrawer
         open={searchOpen}

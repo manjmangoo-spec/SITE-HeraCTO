@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { ChevronDown } from 'lucide-react';
-import { Product, PRODUCTS, CATEGORIES, SORT_OPTIONS, sortProducts } from '../data/products';
+import { SlidersHorizontal } from 'lucide-react';
+import { Product, PRODUCTS, CATEGORIES, sortProducts } from '../data/products';
 import { ProductCard } from './ProductCard';
+import { FilterDrawer } from './FilterDrawer';
 
 interface ProductsProps {
   onAddToCart:  (product: Product, size: string) => void;
@@ -11,16 +12,49 @@ interface ProductsProps {
 
 export function Products({ onAddToCart, wishlist, onWishlist }: ProductsProps) {
   const [category,  setCategory]  = useState('Todos');
-  const [sortBy,    setSortBy]    = useState('default');
-  const [sortOpen,  setSortOpen]  = useState(false);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [minPrice, setMinPrice] = useState('');
+  const [maxPrice, setMaxPrice] = useState('');
+  const [onSaleOnly, setOnSaleOnly] = useState(false);
+  const [sortBy, setSortBy] = useState('default');
+  const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
+  
   const sectionRef = useRef<HTMLElement>(null);
 
   const getFiltered = useCallback(() => {
-    const base = category === 'Todos'
-      ? PRODUCTS
-      : PRODUCTS.filter((p) => p.category === category);
+    let base = PRODUCTS;
+    
+    // Category filter
+    if (category !== 'Todos') {
+      base = base.filter((p) => p.category === category);
+    }
+    
+    // Sale filter
+    if (onSaleOnly) {
+      base = base.filter((p) => p.originalPrice && p.originalPrice > p.price);
+    }
+    
+    // Size filters
+    if (selectedSizes.length > 0) {
+      base = base.filter((p) => p.sizes.some(size => selectedSizes.includes(size)));
+    }
+
+    // Price filters
+    if (minPrice) {
+      const min = parseFloat(minPrice);
+      if (!isNaN(min)) {
+        base = base.filter((p) => p.price >= min);
+      }
+    }
+    if (maxPrice) {
+      const max = parseFloat(maxPrice);
+      if (!isNaN(max)) {
+        base = base.filter((p) => p.price <= max);
+      }
+    }
+    
     return sortProducts(base, sortBy);
-  }, [category, sortBy]);
+  }, [category, minPrice, maxPrice, onSaleOnly, sortBy, selectedSizes]);
 
   const filtered = getFiltered();
 
@@ -40,7 +74,7 @@ export function Products({ onAddToCart, wishlist, onWishlist }: ProductsProps) {
     );
     sectionRef.current.querySelectorAll('.reveal').forEach((el) => observer.observe(el));
     return () => observer.disconnect();
-  }, [category, sortBy]);
+  }, [category, minPrice, maxPrice, onSaleOnly, sortBy, selectedSizes]);
 
   return (
     <section
@@ -53,7 +87,10 @@ export function Products({ onAddToCart, wishlist, onWishlist }: ProductsProps) {
       <div className="reveal flex flex-col gap-6 mb-[clamp(36px,5vw,64px)]">
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6">
           <div>
-            <p className="label text-[--muted] mb-4">Colecao</p>
+            <div className="flex items-center gap-4 mb-6">
+              <span className="w-10 h-px bg-neutral-900/40"></span>
+              <p className="text-xs uppercase tracking-[0.3em] font-semibold text-neutral-800">Colecao</p>
+            </div>
             <h2 className="font-serif text-display font-semibold uppercase leading-[0.86] tracking-[0.04em]">
               Street<br />Selection
             </h2>
@@ -82,10 +119,10 @@ export function Products({ onAddToCart, wishlist, onWishlist }: ProductsProps) {
               aria-selected={category === cat}
               onClick={() => setCategory(cat)}
               className={`
-                label flex-none h-10 px-5 border transition-colors duration-250
+                label flex-none h-10 px-5 border transition-all duration-300 ease-out
                 ${category === cat
-                  ? 'bg-[--ink] text-white border-[--ink]'
-                  : 'border-[--line-strong] text-[--graphite] hover:border-[--ink] hover:text-[--ink]'
+                  ? 'bg-neutral-900 text-white border-neutral-900 scale-[1.03] shadow-md'
+                  : 'bg-transparent border-black/20 text-black/70 hover:border-black/60 hover:text-black'
                 }
               `}
             >
@@ -94,59 +131,22 @@ export function Products({ onAddToCart, wishlist, onWishlist }: ProductsProps) {
           ))}
         </div>
 
-        {/* Sort dropdown */}
-        <div className="relative">
+        {/* Filter button */}
+        <div>
           <button
             type="button"
-            aria-haspopup="listbox"
-            aria-expanded={sortOpen}
-            onClick={() => setSortOpen((v) => !v)}
-            className="label inline-flex items-center gap-2 h-10 px-4 border border-[--line-strong] text-[--graphite] hover:border-[--ink] transition-colors duration-200"
+            onClick={() => setIsFilterOpen(true)}
+            className={`
+              label flex items-center gap-2 h-10 px-5 border transition-all duration-300 ease-out
+              ${isFilterOpen || minPrice || maxPrice || onSaleOnly || selectedSizes.length > 0 || sortBy !== 'default'
+                ? 'bg-neutral-900 text-white border-neutral-900 shadow-md'
+                : 'bg-transparent border-black/20 text-black/70 hover:border-black/60 hover:text-black'
+              }
+            `}
           >
-            {SORT_OPTIONS.find((o) => o.value === sortBy)?.label ?? 'Ordenar'}
-            <ChevronDown
-              size={13}
-              strokeWidth={2}
-              aria-hidden="true"
-              className={`transition-transform duration-200 ${sortOpen ? 'rotate-180' : ''}`}
-            />
+            <SlidersHorizontal size={16} strokeWidth={1.5} />
+            Filtros
           </button>
-
-          {sortOpen && (
-            <>
-              <div
-                className="fixed inset-0 z-10"
-                onClick={() => setSortOpen(false)}
-                aria-hidden="true"
-              />
-              <ul
-                role="listbox"
-                aria-label="Opcoes de ordenacao"
-                className="absolute right-0 top-full mt-1 z-20 min-w-[180px] bg-white border border-[--line] shadow-luxury-md"
-              >
-                {SORT_OPTIONS.map((opt) => (
-                  <li key={opt.value} role="none">
-                    <button
-                      type="button"
-                      role="option"
-                      aria-selected={sortBy === opt.value}
-                      onClick={() => { setSortBy(opt.value); setSortOpen(false); }}
-                      className={`
-                        label-sm w-full text-left px-5 py-3.5
-                        transition-colors duration-200
-                        ${sortBy === opt.value
-                          ? 'bg-[--ink] text-white'
-                          : 'text-[--graphite] hover:bg-[--bone]'
-                        }
-                      `}
-                    >
-                      {opt.label}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </>
-          )}
         </div>
       </div>
 
@@ -189,6 +189,23 @@ export function Products({ onAddToCart, wishlist, onWishlist }: ProductsProps) {
           {filtered.length} {filtered.length === 1 ? 'peca' : 'pecas'} na selecao
         </p>
       )}
+
+      <FilterDrawer
+        open={isFilterOpen}
+        onClose={() => setIsFilterOpen(false)}
+        minPrice={minPrice}
+        maxPrice={maxPrice}
+        onSaleOnly={onSaleOnly}
+        sortBy={sortBy}
+        selectedSizes={selectedSizes}
+        onFilterChange={(f) => {
+          setMinPrice(f.minPrice);
+          setMaxPrice(f.maxPrice);
+          setOnSaleOnly(f.onSaleOnly);
+          setSortBy(f.sortBy);
+          setSelectedSizes(f.selectedSizes);
+        }}
+      />
     </section>
   );
 }

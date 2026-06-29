@@ -104,7 +104,7 @@ export function About() {
           </p>
 
           {/* Stats */}
-          <div className="grid grid-cols-3 gap-6 mb-10 py-7 border-y border-hairline">
+          <div className="grid grid-cols-3 gap-6 py-7 border-t border-hairline">
             {STATS.map(({ value, label }) => (
               <div key={label}>
                 <p
@@ -117,33 +117,7 @@ export function About() {
               </div>
             ))}
           </div>
-
-          <a href="#collections" className="btn-outline self-start">
-            Ver colecao
-          </a>
         </div>
-      </div>
-
-      {/* ── Benefits strip ───────────────────────────── */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 border-t border-hairline">
-        {BENEFITS.map(({ icon, label, desc }, i) => (
-          <div
-            key={label}
-            className={`
-              reveal py-8 px-[clamp(24px,4vw,52px)]
-              flex flex-col items-center text-center gap-3
-              ${i < 2 ? 'sm:border-r border-hairline' : ''}
-              ${i > 0 ? 'border-t sm:border-t-0 border-hairline' : ''}
-            `}
-            style={{ transitionDelay: `${i * 0.1}s` }}
-          >
-            <div className="w-10 h-10 rounded-full border border-[--line] grid place-items-center text-[--muted]">
-              {icon}
-            </div>
-            <p className="label text-[--ink]">{label}</p>
-            <p className="text-xs text-[--muted] font-light leading-relaxed">{desc}</p>
-          </div>
-        ))}
       </div>
     </section>
   );
